@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/useAuth';
 import { login as loginApi } from '../api/services';
+import { getApiErrorMessage } from '../api/axios';
 import { Eye, EyeOff, LogIn, Shield, GraduationCap } from 'lucide-react';
 
 const demoAccounts = [
@@ -49,7 +50,7 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       navigate(response.data.role === 'ADMIN' ? '/admin' : '/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Invalid credentials');
+      toast.error(getApiErrorMessage(error, 'Invalid credentials'));
     } finally {
       setLoading(false);
     }

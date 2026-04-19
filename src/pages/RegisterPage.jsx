@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { register as registerApi } from '../api/services';
+import { getApiErrorMessage } from '../api/axios';
 import { Eye, EyeOff, UserPlus, Shield } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -45,7 +46,7 @@ export default function RegisterPage() {
       toast.success(`${form.role === 'ADMIN' ? 'Admin' : 'Student'} account created! Please sign in.`);
       navigate('/login');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      toast.error(getApiErrorMessage(error, 'Registration failed'));
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { forgotPassword } from '../api/services';
+import { getApiErrorMessage } from '../api/axios';
 import { Mail, ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
@@ -17,8 +18,8 @@ export default function ForgotPasswordPage() {
       await forgotPassword(email);
       setSent(true);
       toast.success('Reset link sent to your email!');
-    } catch {
-      toast.error('Failed to send reset email');
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Failed to send reset email'));
     } finally { setLoading(false); }
   };
 
