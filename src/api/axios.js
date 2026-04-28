@@ -1,11 +1,27 @@
 import axios from 'axios';
 
-const railwayApiUrl = 'https://backend-api-production-1c4b.up.railway.app';
+const railwayApiUrl = 'https://student-portfolio-backend-production-16b1.up.railway.app';
 const isLocalHost =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || (isLocalHost ? 'http://localhost:8080' : railwayApiUrl);
+function normalizeApiBaseUrl(value) {
+  if (!value) {
+    return value;
+  }
+
+  const normalizedValue = value.trim();
+  const envPrefix = 'VITE_API_BASE_URL=';
+
+  if (normalizedValue.startsWith(envPrefix)) {
+    return normalizedValue.slice(envPrefix.length).trim();
+  }
+
+  return normalizedValue;
+}
+
+const configuredApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+const apiBaseUrl = configuredApiBaseUrl || (isLocalHost ? 'http://localhost:8080' : railwayApiUrl);
 
 const api = axios.create({
   baseURL: apiBaseUrl,
