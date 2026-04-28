@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -11,7 +11,16 @@ const CATEGORIES = ['Web Development', 'Mobile App', 'Machine Learning', 'Data S
 export default function EditProject() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: '', description: '', category: '', techStack: '', githubUrl: '', liveUrl: '', documentationUrl: '' });
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    techStack: '',
+    githubUrl: '',
+    liveUrl: '',
+    documentationUrl: '',
+    showcaseLocation: '',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -27,6 +36,7 @@ export default function EditProject() {
           githubUrl: project.githubUrl || '',
           liveUrl: project.liveUrl || '',
           documentationUrl: project.documentationUrl || '',
+          showcaseLocation: project.showcaseLocation || '',
         });
       })
       .catch(() => {
@@ -81,10 +91,12 @@ export default function EditProject() {
                 <label className="form-label">Project Title</label>
                 <input name="title" className="form-control" value={form.title} onChange={handleChange} />
               </div>
+
               <div className="form-group">
                 <label className="form-label">Description</label>
                 <textarea name="description" className="form-control" rows={5} value={form.description} onChange={handleChange} />
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Category</label>
@@ -97,6 +109,7 @@ export default function EditProject() {
                   <input name="techStack" className="form-control" placeholder="Comma-separated" value={form.techStack} onChange={handleChange} />
                 </div>
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">GitHub URL</label>
@@ -107,10 +120,23 @@ export default function EditProject() {
                   <input name="liveUrl" type="url" className="form-control" value={form.liveUrl} onChange={handleChange} />
                 </div>
               </div>
+
               <div className="form-group">
                 <label className="form-label">Documentation URL</label>
                 <input name="documentationUrl" type="url" className="form-control" value={form.documentationUrl} onChange={handleChange} />
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Showcase Location</label>
+                <input
+                  name="showcaseLocation"
+                  className="form-control"
+                  placeholder="Where this project is showcased or deployed"
+                  value={form.showcaseLocation}
+                  onChange={handleChange}
+                />
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => navigate(`/projects/${id}`)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}><Save size={16} />{saving ? 'Saving...' : ' Save Changes'}</button>

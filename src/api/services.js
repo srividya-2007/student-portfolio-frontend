@@ -4,6 +4,7 @@ import api from './axios';
 export const register = (data) => api.post('/api/auth/register', data);
 export const login = (data) => api.post('/api/auth/login', data);
 export const forgotPassword = (email) => api.post('/api/auth/forgot-password', { email });
+export const verifyResetOtp = (data) => api.post('/api/auth/verify-reset-otp', data);
 export const resetPassword = (data) => api.post('/api/auth/reset-password', data);
 
 // Student / Profile

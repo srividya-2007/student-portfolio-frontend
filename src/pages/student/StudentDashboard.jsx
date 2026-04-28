@@ -1,11 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/useAuth';
 import { getMyProjects, getUnreadCount } from '../../api/services';
-import { FolderOpen, CheckCircle, Clock, AlertCircle, Plus, TrendingUp } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, FolderOpen, MapPin, Plus, TrendingUp } from 'lucide-react';
+import { CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+const PIE_COLORS = ['#2563EB', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#14B8A6'];
+
+function formatMonthLabel(date) {
+  return date.toLocaleString('en-US', { month: 'short' });
+}
+
+function buildCategoryChartData(projects) {
+  const grouped = projects.reduce((accumulator, project) => {
+    const key = project.category || 'Other';
+    accumulator[key] = (accumulator[key] || 0) + 1;
+    return accumulator;
+  }, {});
+
+  return Object.entries(grouped).map(([name, value]) => ({ name, value }));
+}
+
+function buildMonthlyTrendData(projects, months = 6) {
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: months }, (_, index) => {
+    const current = new Date(monthStart);
+    current.setMonth(monthStart.getMonth() - (months - 1 - index));
+
+    const count = projects.filter((project) => {
+      if (!project.createdAt) {
+        return false;
+      }
+
+      const createdAt = new Date(project.createdAt);
+      return createdAt.getFullYear() === current.getFullYear() && createdAt.getMonth() === current.getMonth();
+    }).length;
+
+    return { month: formatMonthLabel(current), count };
+  });
+}
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -30,6 +69,15 @@ export default function StudentDashboard() {
   const recentProjects = [...projects]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5);
+
+  const categoryChartData = buildCategoryChartData(projects);
+  const monthlyTrendData = buildMonthlyTrendData(projects);
+  const readinessMetrics = [
+    { label: 'GitHub Linked', value: projects.filter((project) => project.githubUrl).length, color: '#2563EB' },
+    { label: 'Live Demos', value: projects.filter((project) => project.liveUrl).length, color: '#10B981' },
+    { label: 'Docs Added', value: projects.filter((project) => project.documentationUrl).length, color: '#F59E0B' },
+    { label: 'Map Ready', value: projects.filter((project) => project.showcaseLocation).length, color: '#EC4899' },
+  ];
 
   const statusBadge = (status) => {
     const map = {
@@ -62,7 +110,6 @@ export default function StudentDashboard() {
             </Link>
           </div>
 
-          {/* Stats */}
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon"><FolderOpen size={22} color="var(--primary-light)" /></div>
@@ -82,21 +129,79 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Progress */}
           {total > 0 && (
-            <div className="card" style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <TrendingUp size={18} color="var(--primary-light)" />
-                <span className="card-title" style={{ margin: 0 }}>Approval Rate</span>
-                <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--primary-light)' }}>{Math.round((approved / total) * 100)}%</span>
+            <>
+              <div className="card" style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <TrendingUp size={18} color="var(--primary-light)" />
+                  <span className="card-title" style={{ margin: 0 }}>Approval Rate</span>
+                  <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--primary-light)' }}>{Math.round((approved / total) * 100)}%</span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${(approved / total) * 100}%` }} />
+                </div>
               </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${(approved / total) * 100}%` }} />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <div className="card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <TrendingUp size={18} color="var(--primary-light)" />
+                    <h2 className="card-title" style={{ margin: 0 }}>Project Mix</h2>
+                  </div>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <PieChart>
+                      <Pie data={categoryChartData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={86} paddingAngle={4}>
+                        {categoryChartData.map((entry, index) => (
+                          <Cell key={`${entry.name}-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <TrendingUp size={18} color="var(--primary-light)" />
+                    <h2 className="card-title" style={{ margin: 0 }}>Submission Activity</h2>
+                  </div>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={monthlyTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={3} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <MapPin size={18} color="var(--primary-light)" />
+                    <h2 className="card-title" style={{ margin: 0 }}>Portfolio Readiness</h2>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {readinessMetrics.map((metric) => (
+                      <div key={metric.label}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.875rem' }}>
+                          <span style={{ color: 'var(--gray-600)' }}>{metric.label}</span>
+                          <strong>{metric.value}/{total}</strong>
+                        </div>
+                        <div className="progress-bar" style={{ height: 10 }}>
+                          <div
+                            className="progress-fill"
+                            style={{ width: `${(metric.value / total) * 100}%`, background: metric.color }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
-          {/* Recent Projects */}
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 className="card-title" style={{ margin: 0 }}>Recent Projects</h2>

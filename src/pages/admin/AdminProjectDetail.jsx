@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { getProject, reviewProject, addFeedback } from '../../api/services';
-import { ArrowLeft, CheckCircle, XCircle, Eye, MessageSquare, GitBranch, ExternalLink } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Eye, MessageSquare, GitBranch, ExternalLink, MapPin } from 'lucide-react';
 
 const STATUS_COLORS = { APPROVED: 'badge-green', PENDING: 'badge-yellow', REJECTED: 'badge-red', UNDER_REVIEW: 'badge-blue' };
 
@@ -74,6 +74,10 @@ export default function AdminProjectDetail() {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
 
+  const mapQuery = project?.showcaseLocation ? encodeURIComponent(project.showcaseLocation) : '';
+  const mapsEmbedUrl = mapQuery ? `https://www.google.com/maps?q=${mapQuery}&z=15&output=embed` : '';
+  const mapsSearchUrl = mapQuery ? `https://www.google.com/maps/search/?api=1&query=${mapQuery}` : '';
+
   return (
     <div className="page-wrapper">
       <Navbar />
@@ -97,6 +101,7 @@ export default function AdminProjectDetail() {
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                   {project?.githubUrl && <a href={project.githubUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm"><GitBranch size={14} /> GitHub</a>}
                   {project?.liveUrl && <a href={project.liveUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><ExternalLink size={14} /> Live Demo</a>}
+                  {mapsSearchUrl && <a href={mapsSearchUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><MapPin size={14} /> Google Maps</a>}
                 </div>
               </div>
 
@@ -190,6 +195,14 @@ export default function AdminProjectDetail() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   <div><p style={{ fontSize: '0.75rem', color: 'var(--gray-500)', textTransform: 'uppercase', fontWeight: 600 }}>Category</p><span className="badge badge-blue">{project?.category}</span></div>
                   <div><p style={{ fontSize: '0.75rem', color: 'var(--gray-500)', textTransform: 'uppercase', fontWeight: 600 }}>Submitted</p><p style={{ fontSize: '0.875rem' }}>{project?.createdAt ? new Date(project.createdAt).toLocaleDateString() : '-'}</p></div>
+                  {project?.showcaseLocation && (
+                    <div>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)', textTransform: 'uppercase', fontWeight: 600 }}>Showcase Location</p>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <MapPin size={14} color="var(--primary-light)" /> {project.showcaseLocation}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -200,6 +213,23 @@ export default function AdminProjectDetail() {
                     {project.techStack.split(',').map((tech) => (
                       <span key={tech} style={{ background: 'var(--secondary)', color: 'var(--primary)', padding: '0.25rem 0.6rem', borderRadius: '50px', fontSize: '0.8rem', fontWeight: 500 }}>{tech.trim()}</span>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {mapsEmbedUrl && (
+                <div className="card">
+                  <h2 className="card-title">Project Map</h2>
+                  <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--gray-200)' }}>
+                    <iframe
+                      title={`${project.title} location`}
+                      src={mapsEmbedUrl}
+                      width="100%"
+                      height="220"
+                      style={{ border: 0, display: 'block' }}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
                   </div>
                 </div>
               )}
